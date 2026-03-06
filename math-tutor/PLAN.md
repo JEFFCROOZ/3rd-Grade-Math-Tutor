@@ -3,7 +3,7 @@
 ## Context
 Parent (age 39) is comfortable with math but unfamiliar with Common Core methods (arrays, area models, number bonds). His 8-year-old daughter is preparing for NYC standardized tests (NYS Math Assessment, 3rd grade). Goal: a Streamlit app that lives on the iPad (Safari), has a child-facing practice mode and a parent-facing dashboard/learning mode, and uses Claude API for both tutoring and problem generation.
 
-Follows the patterns established in `/Users/jcmbair2021/Claude- MLOps/mlops-part2/` exactly.
+Follows the patterns established in `/Users/my-laptop/Claude- MLOps/mlops-part2/` exactly.
 
 ---
 
@@ -221,10 +221,10 @@ Key CSS colors: success gold `#FFD700`, success bg `#F0FFF4`, wrong amber `#F6AD
 ## Critical Files to Reference During Build
 | File | Why |
 |---|---|
-| `/Users/jcmbair2021/Claude- MLOps/mlops-part2/utils/styles.py` | CSS injection pattern, auth guard, helper components |
-| `/Users/jcmbair2021/Claude- MLOps/mlops-part2/app.py` | Entry point structure, session routing |
-| `/Users/jcmbair2021/Claude- MLOps/mlops-part2/pages/1_Home.py` | Card navigation, `st.switch_page` pattern |
-| `/Users/jcmbair2021/Claude- MLOps/mlops-part2/.streamlit/config.toml` | Theme file to replace |
+| `/Users/my-laptop/Claude- MLOps/mlops-part2/utils/styles.py` | CSS injection pattern, auth guard, helper components |
+| `/Users/my-laptop/Claude- MLOps/mlops-part2/app.py` | Entry point structure, session routing |
+| `/Users/my-laptop/Claude- MLOps/mlops-part2/pages/1_Home.py` | Card navigation, `st.switch_page` pattern |
+| `/Users/my-laptop/Claude- MLOps/mlops-part2/.streamlit/config.toml` | Theme file to replace |
 
 ---
 

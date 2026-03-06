@@ -1,6 +1,6 @@
 # Math Tutor Project — Session Context
 
-**Owner:** Jeff (jeff@cruzdigitalconsulting.com)
+**Owner:** Jeff
 **Last updated:** March 2026
 **Purpose:** Preserve key decisions, architecture, and state for future Claude sessions
 
@@ -24,13 +24,13 @@ A Streamlit app that tutors Jeff's 8-year-old daughter in Common Core 3rd grade 
 ### Live Deployment
 - **GitHub:** https://github.com/JEFFCROOZ/3rd-Grade-Math-Tutor
 - **Streamlit Cloud:** https://3rd-grade-math-tutor-hwjkbvudfjpc6hydtwrosj.streamlit.app
-- **Local path:** `/Users/jcmbair2021/Claude- Math Tutor/math-tutor/`
+- **Local path:** `/Users/my-laptop/Claude- Math Tutor/math-tutor/`
 
 ### Launch Command (local)
 ```bash
 export ANTHROPIC_API_KEY=sk-ant-your-key-here
-cd "/Users/jcmbair2021/Claude- Math Tutor"
-/Users/jcmbair2021/opt/anaconda3/bin/streamlit run math-tutor/app.py
+cd "/Users/my-laptop/Claude- Math Tutor"
+/Users/my-laptop/opt/anaconda3/bin/streamlit run math-tutor/app.py
 ```
 
 ---
