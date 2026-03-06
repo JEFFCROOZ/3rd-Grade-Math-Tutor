@@ -102,27 +102,25 @@ def generate_problem(topic_key: str, subtopic: str = None, difficulty: str = "me
         f"The problem must be multiple-choice-appropriate with one unambiguous correct answer."
     )
 
-    for attempt in range(2):
-        try:
-            response = _client.messages.create(
-                model=MODEL,
-                max_tokens=800,
-                system=_PROBLEM_SYSTEM,
-                messages=[{"role": "user", "content": user_prompt}],
-            )
-            raw = response.content[0].text.strip()
-            # Strip markdown fences if Claude added them anyway
-            if raw.startswith("```"):
-                raw = raw.split("```")[1]
-                if raw.startswith("json"):
-                    raw = raw[4:]
-            problem = json.loads(raw)
-            if _validate_problem(problem):
-                return problem
-        except Exception:
-            if attempt == 1:
-                break
-            continue
+    try:
+        response = _client.messages.create(
+            model=MODEL,
+            max_tokens=800,
+            system=_PROBLEM_SYSTEM,
+            messages=[{"role": "user", "content": user_prompt}],
+            timeout=15.0,
+        )
+        raw = response.content[0].text.strip()
+        # Strip markdown fences if Claude added them anyway
+        if raw.startswith("```"):
+            raw = raw.split("```")[1]
+            if raw.startswith("json"):
+                raw = raw[4:]
+        problem = json.loads(raw)
+        if _validate_problem(problem):
+            return problem
+    except Exception:
+        pass
 
     return get_fallback_problem(topic_key)
 
@@ -155,6 +153,7 @@ def get_hint(problem_dict: dict, attempt_count: int = 0) -> str:
             max_tokens=120,
             system=_HINT_SYSTEM,
             messages=[{"role": "user", "content": user_prompt}],
+            timeout=15.0,
         )
         return response.content[0].text.strip()
     except Exception:
