@@ -1,6 +1,14 @@
+import os
 import streamlit as st
 from utils.styles import inject_global_css
 from utils.data_loader import PARENT_PIN
+
+# Expose DATABASE_URL from st.secrets to os.environ so progress_store can read it
+if "DATABASE_URL" not in os.environ:
+    try:
+        os.environ["DATABASE_URL"] = st.secrets["DATABASE_URL"]
+    except Exception:
+        pass
 
 st.set_page_config(
     page_title="Math Stars",

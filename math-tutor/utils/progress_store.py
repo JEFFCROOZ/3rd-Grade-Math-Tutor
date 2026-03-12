@@ -15,6 +15,27 @@ if not os.access(_PROJECT_ROOT, os.W_OK):
     _DATA_DIR = "/tmp/math-tutor-data"
 PROGRESS_FILE = os.path.join(_DATA_DIR, "progress.json")
 
+# Postgres backend — used when DATABASE_URL is set in the environment
+_DATABASE_URL = os.environ.get("DATABASE_URL")
+
+
+def _pg_connect():
+    import psycopg2
+    return psycopg2.connect(_DATABASE_URL)
+
+
+def _pg_ensure_table():
+    with _pg_connect() as conn:
+        with conn.cursor() as cur:
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS progress (
+                    id INTEGER PRIMARY KEY DEFAULT 1,
+                    data JSONB NOT NULL,
+                    updated_at TIMESTAMP DEFAULT NOW()
+                )
+            """)
+
+
 _DEFAULT_TOPIC = {"attempted": 0, "correct": 0, "stars": 0, "last_practiced": None}
 
 _DEFAULT_SCHEMA = {
@@ -45,6 +66,17 @@ _MAX_WRONG_ATTEMPTS = 100
 
 
 def load_progress() -> dict:
+    if _DATABASE_URL:
+        try:
+            _pg_ensure_table()
+            with _pg_connect() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("SELECT data FROM progress WHERE id = 1")
+                    row = cur.fetchone()
+                    if row:
+                        return row[0]  # psycopg2 returns JSONB as a Python dict
+        except Exception:
+            pass  # fall through to file backend
     if not os.path.exists(PROGRESS_FILE):
         data = json.loads(json.dumps(_DEFAULT_SCHEMA))
         data["meta"]["created"] = datetime.now().isoformat()
@@ -59,8 +91,22 @@ def load_progress() -> dict:
 
 
 def save_progress(data: dict) -> None:
-    os.makedirs(_DATA_DIR, exist_ok=True)
     data["meta"]["last_updated"] = datetime.now().isoformat()
+    if _DATABASE_URL:
+        try:
+            _pg_ensure_table()
+            with _pg_connect() as conn:
+                with conn.cursor() as cur:
+                    cur.execute("""
+                        INSERT INTO progress (id, data, updated_at)
+                        VALUES (1, %s, NOW())
+                        ON CONFLICT (id) DO UPDATE
+                            SET data = EXCLUDED.data, updated_at = NOW()
+                    """, (json.dumps(data),))
+            return
+        except Exception:
+            pass  # fall through to file backend
+    os.makedirs(_DATA_DIR, exist_ok=True)
     tmp_path = PROGRESS_FILE + ".tmp"
     with open(tmp_path, "w") as f:
         json.dump(data, f, indent=2, default=str)
