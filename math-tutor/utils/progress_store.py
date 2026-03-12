@@ -9,7 +9,11 @@ from datetime import datetime, date
 
 # Anchor path to project root (parent of utils/) regardless of launch CWD
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PROGRESS_FILE = os.path.join(_PROJECT_ROOT, "data", "progress.json")
+_DATA_DIR = os.path.join(_PROJECT_ROOT, "data")
+if not os.access(_PROJECT_ROOT, os.W_OK):
+    # Streamlit Cloud mounts source as read-only; fall back to /tmp
+    _DATA_DIR = "/tmp/math-tutor-data"
+PROGRESS_FILE = os.path.join(_DATA_DIR, "progress.json")
 
 _DEFAULT_TOPIC = {"attempted": 0, "correct": 0, "stars": 0, "last_practiced": None}
 
@@ -55,7 +59,7 @@ def load_progress() -> dict:
 
 
 def save_progress(data: dict) -> None:
-    os.makedirs("data", exist_ok=True)
+    os.makedirs(_DATA_DIR, exist_ok=True)
     data["meta"]["last_updated"] = datetime.now().isoformat()
     tmp_path = PROGRESS_FILE + ".tmp"
     with open(tmp_path, "w") as f:
