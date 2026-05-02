@@ -7,6 +7,8 @@ import json
 import os
 from datetime import datetime, date
 
+from utils.data_loader import TOPICS
+
 # Anchor path to project root (parent of utils/) regardless of launch CWD
 _PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 _DATA_DIR = os.path.join(_PROJECT_ROOT, "data")
@@ -15,13 +17,23 @@ if not os.access(_PROJECT_ROOT, os.W_OK):
     _DATA_DIR = "/tmp/math-tutor-data"
 PROGRESS_FILE = os.path.join(_DATA_DIR, "progress.json")
 
-# Postgres backend — used when DATABASE_URL is set in the environment
-_DATABASE_URL = os.environ.get("DATABASE_URL")
+def _get_database_url():
+    env_value = os.environ.get("DATABASE_URL")
+    if env_value:
+        return env_value
+    try:
+        import streamlit as st
+        secret_value = st.secrets.get("DATABASE_URL")
+        if secret_value:
+            return secret_value
+    except Exception:
+        pass
+    return None
 
 
 def _pg_connect():
     import psycopg2
-    return psycopg2.connect(_DATABASE_URL)
+    return psycopg2.connect(_get_database_url())
 
 
 def _pg_ensure_table():
@@ -42,7 +54,7 @@ _DEFAULT_SCHEMA = {
     "meta": {
         "created": None,
         "last_updated": None,
-        "schema_version": "1.0",
+        "schema_version": "2.0",
         "focus_topic": None,
     },
     "totals": {
@@ -50,13 +62,7 @@ _DEFAULT_SCHEMA = {
         "problems_attempted": 0,
         "problems_correct": 0,
     },
-    "topics": {
-        "3OA": dict(_DEFAULT_TOPIC),
-        "3NBT": dict(_DEFAULT_TOPIC),
-        "3NF": dict(_DEFAULT_TOPIC),
-        "3MD": dict(_DEFAULT_TOPIC),
-        "3G": dict(_DEFAULT_TOPIC),
-    },
+    "topics": {key: dict(_DEFAULT_TOPIC) for key in TOPICS},
     "sessions": [],
     "wrong_attempts": [],
 }
@@ -65,8 +71,33 @@ _MAX_SESSIONS = 30
 _MAX_WRONG_ATTEMPTS = 100
 
 
+def _normalize_progress(data: dict) -> dict:
+    normalized = json.loads(json.dumps(_DEFAULT_SCHEMA))
+
+    if not isinstance(data, dict):
+        normalized["meta"]["created"] = datetime.now().isoformat()
+        return normalized
+
+    normalized["meta"].update(data.get("meta", {}))
+    normalized["totals"].update(data.get("totals", {}))
+
+    saved_topics = data.get("topics", {})
+    normalized["topics"].update(saved_topics)
+    for key in TOPICS:
+        normalized["topics"].setdefault(key, dict(_DEFAULT_TOPIC))
+
+    normalized["sessions"] = data.get("sessions", [])
+    normalized["wrong_attempts"] = data.get("wrong_attempts", [])
+
+    if not normalized["meta"].get("created"):
+        normalized["meta"]["created"] = datetime.now().isoformat()
+    normalized["meta"]["schema_version"] = _DEFAULT_SCHEMA["meta"]["schema_version"]
+
+    return normalized
+
+
 def load_progress() -> dict:
-    if _DATABASE_URL:
+    if _get_database_url():
         try:
             _pg_ensure_table()
             with _pg_connect() as conn:
@@ -74,25 +105,21 @@ def load_progress() -> dict:
                     cur.execute("SELECT data FROM progress WHERE id = 1")
                     row = cur.fetchone()
                     if row:
-                        return row[0]  # psycopg2 returns JSONB as a Python dict
+                        return _normalize_progress(row[0])  # psycopg2 returns JSONB as a Python dict
         except Exception:
             pass  # fall through to file backend
     if not os.path.exists(PROGRESS_FILE):
-        data = json.loads(json.dumps(_DEFAULT_SCHEMA))
-        data["meta"]["created"] = datetime.now().isoformat()
-        return data
+        return _normalize_progress({})
     try:
         with open(PROGRESS_FILE, "r") as f:
-            return json.load(f)
+            return _normalize_progress(json.load(f))
     except (json.JSONDecodeError, OSError):
-        data = json.loads(json.dumps(_DEFAULT_SCHEMA))
-        data["meta"]["created"] = datetime.now().isoformat()
-        return data
+        return _normalize_progress({})
 
 
 def save_progress(data: dict) -> None:
     data["meta"]["last_updated"] = datetime.now().isoformat()
-    if _DATABASE_URL:
+    if _get_database_url():
         try:
             _pg_ensure_table()
             with _pg_connect() as conn:

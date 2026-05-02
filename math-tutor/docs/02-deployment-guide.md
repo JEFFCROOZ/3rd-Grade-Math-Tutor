@@ -1,114 +1,111 @@
 # 02 — Deployment Guide
 
-> How to run locally (for persistent progress) and how to deploy to Streamlit Community Cloud.
+How to run locally and how to deploy while keeping the current persistence options.
 
----
+## Option A: Run Locally
 
-## Option A: Run Locally (Recommended for Progress Tracking)
-
-Running locally means progress persists in `data/progress.json` across sessions. This is the best option for regular use.
+Recommended if you want the simplest setup with persistent file-based progress.
 
 ### Requirements
+
 - Python 3.9+
-- Anaconda or pip
-- An Anthropic API key
+- `pip`
+- an OpenAI API key
 
 ### Setup
 
 ```bash
 git clone https://github.com/JEFFCROOZ/3rd-Grade-Math-Tutor.git
-cd 3rd-Grade-Math-Tutor
+cd 3rd-Grade-Math-Tutor/math-tutor
 pip install -r requirements.txt
 ```
 
 ### Set your API key
 
-**macOS (terminal):**
+macOS:
+
 ```bash
-export ANTHROPIC_API_KEY=sk-ant-your-key-here
+export OPENAI_API_KEY=your-key-here
 ```
 
-To make it permanent, add that line to `~/.zshrc` or `~/.bash_profile`.
+Optional:
 
-### Run the app
+```bash
+export OPENAI_MODEL=gpt-5-mini
+```
+
+### Run
+
 ```bash
 streamlit run app.py
 ```
 
-### Access on iPad (same WiFi network)
-When the app starts, the terminal shows:
-```
-Network URL: http://192.168.1.x:8501
-```
-Open that URL in iPad Safari. Works on any device on the same WiFi network.
+### iPad access on the same WiFi
 
----
+When Streamlit starts, copy the `Network URL` into Safari on the iPad.
 
-## Option B: Streamlit Community Cloud (Free Hosting)
+## Option B: Streamlit Community Cloud
 
-> ⚠️ **Ephemeral storage warning:** Streamlit Community Cloud does not have persistent file storage. `data/progress.json` will reset whenever the app restarts, sleeps, or is redeployed. Progress will not survive between sessions. If tracking progress over time matters, use Option A (local) instead.
+The app can be deployed to Streamlit Cloud.
 
-The app will still work correctly on Streamlit Cloud — problems generate, hints work, stars show during a session — but the history won't persist.
+### Important storage note
 
-### Steps
+If you do **not** set `DATABASE_URL`, then hosted progress may reset because Streamlit Cloud does not guarantee durable local file storage between restarts.
 
-1. Go to [share.streamlit.io](https://share.streamlit.io)
-2. Sign in with your GitHub account (JEFFCROOZ)
-3. Click **New app**
-4. Select:
-   - Repository: `JEFFCROOZ/3rd-Grade-Math-Tutor`
-   - Branch: `main`
-   - Main file path: `app.py`
-5. Click **Advanced settings**
-6. Under **Secrets**, add:
+If you **do** set `DATABASE_URL`, the app will use Postgres for persistent progress.
+
+### Secrets
+
+At minimum:
 
 ```toml
-ANTHROPIC_API_KEY = "sk-ant-your-key-here"
-PARENT_PIN = "your-chosen-pin"
-```
-
-7. Click **Deploy**
-
-The app will build and be live at a public URL like `https://your-app-name.streamlit.app`.
-
----
-
-## Secrets Reference
-
-| Secret | Required | Description |
-|---|---|---|
-| `ANTHROPIC_API_KEY` | Yes (for live problems) | Your Anthropic API key. Without it, the app falls back to static practice problems. |
-| `PARENT_PIN` | No | Overrides the default PIN (`1234`). Set this before sharing the app URL. |
-
-### Local secrets (alternative to environment variable)
-
-You can also create `.streamlit/secrets.toml` for local development:
-
-```toml
-ANTHROPIC_API_KEY = "sk-ant-your-key-here"
+OPENAI_API_KEY = "your-key-here"
+OPENAI_MODEL = "gpt-5-mini"
 PARENT_PIN = "your-pin"
 ```
 
-This file is gitignored and will not be committed.
+Optional persistent storage:
 
----
+```toml
+DATABASE_URL = "postgres://..."
+```
 
-## Changing the Parent PIN
+## Local `.streamlit/secrets.toml`
 
-Three ways, in order of preference:
+You can also create local secrets instead of exporting env vars:
 
-1. **Streamlit Cloud:** Set `PARENT_PIN` in the app secrets (see above)
-2. **Local with secrets.toml:** Add `PARENT_PIN = "your-pin"` to `.streamlit/secrets.toml`
-3. **Direct edit:** Change `PARENT_PIN = "1234"` in `utils/data_loader.py`
+```toml
+OPENAI_API_KEY = "your-key-here"
+OPENAI_MODEL = "gpt-5-mini"
+PARENT_PIN = "your-pin"
+DATABASE_URL = "postgres://..."
+```
 
----
+`DATABASE_URL` is optional.
 
-## Upgrading to Persistent Cloud Storage
+## Current Model Layer
 
-If persistent progress tracking on the cloud becomes a priority, the upgrade path is:
+The app uses the OpenAI Responses API through `utils/openai_client.py`.
 
-1. Add `supabase-py` or `pymongo` to `requirements.txt`
-2. Replace `utils/progress_store.py` read/write functions with database calls
-3. Add database connection string to Streamlit secrets
+Default model:
 
-The rest of the app doesn't need to change — all database interaction is isolated in `progress_store.py`.
+- `gpt-5-mini`
+
+Override options:
+
+- `OPENAI_MODEL` environment variable
+- `OPENAI_MODEL` in Streamlit secrets
+
+## Persistence Behavior Summary
+
+### No `DATABASE_URL`
+
+- local runs: file-based persistence in `data/progress.json`
+- hosted runs: works, but progress may not survive restarts
+
+### With `DATABASE_URL`
+
+- local runs: database-backed persistence
+- hosted runs: database-backed persistence
+
+This preserves the current dual-path behavior rather than forcing one storage method.

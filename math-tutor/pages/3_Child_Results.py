@@ -1,10 +1,10 @@
 import streamlit as st
 from utils.styles import inject_global_css, require_child_auth, star_display, section_break
-from utils.data_loader import get_encouragement
+from utils.data_loader import APP_NAME, TOPICS, get_encouragement
 from utils.progress_store import close_session, get_star_count
 
 st.set_page_config(
-    page_title="Math Stars — Session Done!",
+    page_title=f"{APP_NAME} — Session Done!",
     page_icon="⭐",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -17,6 +17,7 @@ session_correct = st.session_state.get("session_correct", 0)
 session_stars = st.session_state.get("session_stars", 0)
 topic = st.session_state.get("selected_topic", "3OA")
 session_start = st.session_state.get("session_start")
+topic_label = TOPICS.get(topic, {}).get("label", topic)
 
 # Close session in progress store
 if session_start and session_problems > 0:
@@ -34,6 +35,12 @@ message = get_encouragement(accuracy)
 
 # ── Results display ───────────────────────────────────────────────────────────
 st.markdown("## 🎉 Great session!")
+st.markdown(
+    f'<p style="text-align:center; color:#718096; margin-top:-0.25rem;">'
+    f'You practiced <strong>{topic_label}</strong> today.'
+    f"</p>",
+    unsafe_allow_html=True,
+)
 
 st.markdown(star_display(session_stars), unsafe_allow_html=True)
 st.markdown("<br>", unsafe_allow_html=True)

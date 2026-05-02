@@ -1,11 +1,11 @@
 import streamlit as st
 from utils.styles import inject_global_css, require_parent_auth, parent_banner, section_break
-from utils.data_loader import TOPICS
+from utils.data_loader import APP_NAME, TOPICS
 from utils.progress_store import get_wrong_attempts
-from utils.claude_client import explain_wrong_answer_for_parent
+from utils.openai_client import explain_wrong_answer_for_parent
 
 st.set_page_config(
-    page_title="Math Stars — Wrong Answer Review",
+    page_title=f"{APP_NAME} — Wrong Answer Review",
     page_icon="🔍",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -24,7 +24,7 @@ section_break()
 
 # ── Topic filter ──────────────────────────────────────────────────────────────
 filter_options = {"All Topics": None} | {
-    f"{info['emoji']} {info['label']}": key for key, info in TOPICS.items()
+    f"{info['emoji']} {info['label']} ({info['standard']})": key for key, info in TOPICS.items()
 }
 selected_filter_label = st.selectbox("Filter by topic", list(filter_options.keys()))
 filter_key = filter_options[selected_filter_label]

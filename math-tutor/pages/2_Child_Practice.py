@@ -2,7 +2,7 @@
 The core practice loop. State machine via st.session_state.practice_state.
 
 States:
-  loading          → fetch problem from Claude, then → answering
+  loading          → fetch problem from the live model layer, then → answering
   answering        → show problem + answer choices + hint button
   hint_shown       → show hint card, answers still live
   answered_correct → celebration, Next Problem button
@@ -23,12 +23,12 @@ from utils.styles import (
     render_visual,
     section_break,
 )
-from utils.data_loader import TOPICS, get_subtopics
-from utils.claude_client import generate_problem, get_hint
+from utils.data_loader import APP_NAME, LANES, TOPICS, get_subtopics
+from utils.openai_client import generate_problem, get_hint
 from utils.progress_store import record_attempt
 
 st.set_page_config(
-    page_title="Math Stars — Practice",
+    page_title=f"{APP_NAME} — Practice",
     page_icon="⭐",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -40,6 +40,7 @@ require_child_auth()
 topic_key = st.session_state.get("selected_topic", "3OA")
 topic_info = TOPICS.get(topic_key, {})
 topic_label = topic_info.get("label", "Math")
+lane_label = LANES.get(topic_info.get("lane", ""), {}).get("label", "Summer Bridge")
 
 def _init_state():
     defaults = {
@@ -65,6 +66,12 @@ _init_state()
 col_title, col_stats = st.columns([3, 1])
 with col_title:
     st.markdown(f"### {topic_info.get('emoji', '⭐')} {topic_label}")
+    st.markdown(
+        f'<div style="color:#718096; font-size:0.85rem; margin-top:-0.4rem;">'
+        f'{lane_label} · {topic_info.get("standard", topic_key)}'
+        f"</div>",
+        unsafe_allow_html=True,
+    )
 with col_stats:
     stars = st.session_state.session_stars
     st.markdown(

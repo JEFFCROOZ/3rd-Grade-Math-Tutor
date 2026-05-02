@@ -1,87 +1,122 @@
-# 3rd Grade Math Tutor ⭐
+# Grade 3 to 4 Math Bridge ⭐
 
-A Streamlit app for NYC 3rd grade Common Core math practice — built for an 8-year-old preparing for the NYS Math Assessment, with a parent dashboard on the side.
+A Streamlit app for a summer math bridge between third and fourth grade in NYC-style elementary math instruction.
 
-## What It Does
+It keeps the original child-and-parent split:
 
-**Child Mode** — Your daughter picks a topic, gets AI-generated practice problems, asks for hints (Socratic — never just gives the answer), earns stars for correct answers, and sees a session summary when she stops.
+- **Child mode**: pick a topic, solve practice problems, ask for hints, earn stars, and end each session with a simple summary.
+- **Parent mode**: review progress, set a focus topic, learn the method in plain language, and inspect wrong answers.
 
-**Parent Mode** — PIN-protected. You see her progress by topic, set a focus area, learn Common Core methods in plain adult language, and review every wrong answer with on-demand explanations.
+## What Changed
 
-## NYC 3rd Grade Topics Covered
+This project now focuses on a **two-lane summer bridge**:
+
+- **Grade 3 Review**: reinforce the third grade foundations that need to feel solid before school starts.
+- **Grade 4 Preview**: preview the big ideas that will show up in fourth grade.
+
+The live AI layer now uses the **OpenAI Responses API** instead of Anthropic. The default model is `gpt-5-mini`, chosen for fast, lower-cost structured problem generation. OpenAI recommends the Responses API for new projects. Sources: [Responses migration guide](https://developers.openai.com/api/docs/guides/migrate-to-responses), [Responses API reference](https://platform.openai.com/docs/api-reference/responses/list?lang=python), [GPT-5 mini model page](https://platform.openai.com/docs/models/gpt-5-mini/)
+
+## Topic Coverage
+
+### Grade 3 Review
 
 | Standard | Topic |
 |---|---|
-| 3.OA | Multiplication & Division (arrays, word problems, properties) |
-| 3.NBT | Numbers to 1,000 (rounding, add/subtract, multiply by 10s) |
-| 3.NF | Fractions (parts of a whole, number lines, comparing) |
-| 3.MD | Measurement & Data (time, area & perimeter, graphs) |
-| 3.G | Shapes (attributes, partitioning into equal areas) |
+| 3.OA | Multiplication & Division Review |
+| 3.NBT | Place Value to 1,000 Review |
+| 3.NF | Fractions Review |
+| 3.MD | Measurement & Data Review |
+| 3.G | Shapes Review |
+
+### Grade 4 Preview
+
+| Standard | Topic |
+|---|---|
+| 4.OA | Operations & Problem Solving |
+| 4.NBT | Place Value & Big Numbers |
+| 4.NF | Fractions & Decimals |
+| 4.MD | Measurement, Data & Angles |
+| 4.G | Geometry Preview |
 
 ## Tech Stack
 
 - Python 3.9+
-- Streamlit ≥ 1.32
-- Anthropic Claude API (`claude-sonnet-4-6`)
-- File-based progress persistence (`data/progress.json`)
+- Streamlit >= 1.32
+- OpenAI Responses API
+- Default model: `gpt-5-mini`
+- Progress persistence:
+  - local file storage in `data/progress.json`
+  - optional Postgres storage when `DATABASE_URL` is set
 
 ## Run Locally
 
 ```bash
-# 1. Clone the repo
+# Clone the repo
 git clone https://github.com/JEFFCROOZ/3rd-Grade-Math-Tutor.git
-cd 3rd-Grade-Math-Tutor
+cd 3rd-Grade-Math-Tutor/math-tutor
 
-# 2. Install dependencies
+# Install dependencies
 pip install -r requirements.txt
 
-# 3. Set your API key
-export ANTHROPIC_API_KEY=sk-ant-your-key-here
+# Set your OpenAI API key
+export OPENAI_API_KEY=your-key-here
 
-# 4. Run
+# Optional: choose a different model
+export OPENAI_MODEL=gpt-5-mini
+
+# Run
 streamlit run app.py
 ```
 
-Open `http://localhost:8501` in any browser — including iPad Safari on your local network.
+Open `http://localhost:8501` in a browser. On the same WiFi network, you can also use the local network URL on an iPad.
 
 ## Streamlit Cloud Deployment
 
-1. Push this repo to GitHub (already done)
-2. Go to [share.streamlit.io](https://share.streamlit.io) → New app
-3. Select this repo, branch `main`, entry file `app.py`
-4. Under **Advanced settings → Secrets**, add:
+Add these secrets in Streamlit Community Cloud:
 
 ```toml
-ANTHROPIC_API_KEY = "sk-ant-your-key-here"
+OPENAI_API_KEY = "your-key-here"
+OPENAI_MODEL = "gpt-5-mini"
 PARENT_PIN = "your-pin-here"
 ```
 
-> ⚠️ **Important:** Streamlit Community Cloud has ephemeral storage — `data/progress.json` resets when the app restarts or redeploys. For persistent progress tracking, run the app locally instead.
+Optional, for persistent cloud progress:
+
+```toml
+DATABASE_URL = "postgres://..."
+```
+
+Without `DATABASE_URL`, the app still works correctly, but file-based progress on Streamlit Cloud can reset because the filesystem is ephemeral.
 
 ## Configuration
 
 | Setting | Where | Default |
 |---|---|---|
-| Parent PIN | `utils/data_loader.py` → `PARENT_PIN` or Streamlit secrets | `1234` |
-| Claude model | `utils/claude_client.py` → `MODEL` | `claude-sonnet-4-6` |
-| Progress file | `data/progress.json` | Auto-created on first run |
+| Parent PIN | `utils/data_loader.py` or Streamlit secrets | `1234` |
+| OpenAI model | `OPENAI_MODEL` env/secrets or `utils/openai_client.py` | `gpt-5-mini` |
+| Progress file | `data/progress.json` | auto-created on first run |
+| Database backend | `DATABASE_URL` env/secrets | off by default |
 
 ## Project Structure
 
-```
-├── app.py                    # Entry point — mode selector
+```text
+├── app.py
 ├── pages/
-│   ├── 1_Child_Home.py       # Topic picker
-│   ├── 2_Child_Practice.py   # Practice loop + hints
-│   ├── 3_Child_Results.py    # Session summary
-│   ├── 4_Parent_Dashboard.py # Progress overview
-│   ├── 5_Parent_Concepts.py  # Common Core explainer
-│   └── 6_Parent_Review.py    # Wrong answer review
+│   ├── 1_Child_Home.py
+│   ├── 2_Child_Practice.py
+│   ├── 3_Child_Results.py
+│   ├── 4_Parent_Dashboard.py
+│   ├── 5_Parent_Concepts.py
+│   └── 6_Parent_Review.py
 ├── utils/
-│   ├── styles.py             # CSS + component helpers
-│   ├── data_loader.py        # Topics, fallback problems
-│   ├── claude_client.py      # Anthropic API calls
-│   └── progress_store.py     # File-based persistence
+│   ├── data_loader.py
+│   ├── openai_client.py
+│   ├── progress_store.py
+│   └── styles.py
 └── data/
-    └── progress.json         # Auto-created, gitignored
+    └── progress.json
 ```
+
+## Repo Name Note
+
+The GitHub repository is still named `3rd-Grade-Math-Tutor` for continuity, but the app itself is now the `Grade 3 to 4 Math Bridge`.

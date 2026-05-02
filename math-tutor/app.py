@@ -1,17 +1,18 @@
 import os
 import streamlit as st
 from utils.styles import inject_global_css
-from utils.data_loader import PARENT_PIN
+from utils.data_loader import APP_NAME, PARENT_PIN
 
-# Expose DATABASE_URL from st.secrets to os.environ so progress_store can read it
-if "DATABASE_URL" not in os.environ:
-    try:
-        os.environ["DATABASE_URL"] = st.secrets["DATABASE_URL"]
-    except Exception:
-        pass
+# Expose secrets to os.environ so lower-level utilities can read them.
+for key in ("DATABASE_URL", "OPENAI_API_KEY", "OPENAI_MODEL"):
+    if key not in os.environ:
+        try:
+            os.environ[key] = st.secrets[key]
+        except Exception:
+            pass
 
 st.set_page_config(
-    page_title="Math Stars",
+    page_title=APP_NAME,
     page_icon="⭐",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -29,9 +30,12 @@ st.markdown(
     """
     <div style="text-align:center; padding: 2rem 0 1rem 0;">
         <div style="font-size:4rem;">⭐</div>
-        <h1 style="margin:0.25rem 0 0.5rem 0;">Math Stars</h1>
-        <p style="color:#718096; font-size:1.05rem; max-width:400px; margin:0 auto;">
-            Practice math the way your teacher teaches it — and earn stars along the way!
+        <h1 style="margin:0.25rem 0 0.5rem 0;">Grade 3 to 4 Math Bridge</h1>
+        <p style="color:#718096; font-size:1.05rem; max-width:520px; margin:0 auto;">
+            Review third grade foundations, preview fourth grade methods, and earn stars along the way.
+        </p>
+        <p style="color:#718096; font-size:0.95rem; max-width:520px; margin:0.75rem auto 0 auto;">
+            Two lanes inside: <strong>Grade 3 Review</strong> and <strong>Grade 4 Preview</strong>.
         </p>
     </div>
     """,

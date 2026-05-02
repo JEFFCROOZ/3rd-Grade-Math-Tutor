@@ -1,10 +1,10 @@
 import streamlit as st
 from utils.styles import inject_global_css, require_parent_auth, parent_banner, section_break
-from utils.data_loader import TOPICS, get_subtopics
-from utils.claude_client import explain_concept_for_parent
+from utils.data_loader import APP_NAME, TOPICS, get_subtopics
+from utils.openai_client import explain_concept_for_parent
 
 st.set_page_config(
-    page_title="Math Stars — Learn Common Core",
+    page_title=f"{APP_NAME} — Learn the Method",
     page_icon="📚",
     layout="centered",
     initial_sidebar_state="collapsed",
@@ -13,10 +13,10 @@ inject_global_css()
 require_parent_auth()
 
 parent_banner()
-st.markdown("## Learn the Common Core Method")
+st.markdown("## Learn the Method")
 st.markdown(
-    '<p style="color:#718096;">Pick a topic and get a clear, adult explanation of how it\'s taught today — '
-    "and what to do at home to reinforce it.</p>",
+    '<p style="color:#718096;">Pick a bridge topic and get a clear, adult explanation of how it is taught — '
+    "plus practical ways to reinforce it at home over the summer.</p>",
     unsafe_allow_html=True,
 )
 

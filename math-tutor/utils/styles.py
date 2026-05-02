@@ -294,7 +294,7 @@ def require_parent_auth():
         st.switch_page("app.py")
 
 
-# ── Visual Renderers (Python-controlled — Claude only provides parameters) ────
+# ── Visual Renderers (Python-controlled — the model only provides parameters) ──
 
 def render_array(rows: int, cols: int, emoji: str) -> str:
     if rows > 10 or cols > 10:
